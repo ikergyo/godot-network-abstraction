@@ -1,0 +1,34 @@
+[gd_scene format=2]
+
+[node name="Player" type="Panel"]
+margin_top = 151.0
+margin_right = 245.0
+margin_bottom = 492.0
+rect_min_size = Vector2( 245, 340 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PlayerName" type="Label" parent="."]
+margin_right = 244.0
+margin_bottom = 41.0
+rect_min_size = Vector2( 245, 40 )
+text = "Player"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Messages" type="Label" parent="."]
+margin_top = 40.0
+margin_right = 244.0
+margin_bottom = 344.0
+rect_min_size = Vector2( 245, 305 )
+text = "Messages
+"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

@@ -6,8 +6,19 @@
 
 [node name="Lobby" type="Node"]
 script = ExtResource( 1 )
+lobbyMainPanel = NodePath("LobbyMenu")
+lobbyStartPanel = NodePath("LobbyMenu/LobbyStartPanel")
+readyPanel = NodePath("LobbyMenu/InLobbyPanel")
+playerList = NodePath("LobbyMenu/InLobbyPanel/PlayerList")
 
-[node name="HostButton" type="Button" parent="."]
+[node name="LobbyMenu" type="Node2D" parent="."]
+
+[node name="LobbyStartPanel" type="Panel" parent="LobbyMenu"]
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HostButton" type="Button" parent="LobbyMenu/LobbyStartPanel"]
 margin_left = 399.0
 margin_top = 121.0
 margin_right = 611.0
@@ -18,24 +29,49 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="JoinButton" type="Button" parent="."]
-margin_left = 396.0
-margin_top = 346.0
-margin_right = 608.0
-margin_bottom = 389.0
+[node name="JoinButton" type="Button" parent="LobbyMenu/LobbyStartPanel"]
+margin_left = 397.0
+margin_top = 354.0
+margin_right = 609.0
+margin_bottom = 397.0
 text = "Join Game"
 script = ExtResource( 3 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="IpAddressText" type="TextEdit" parent="."]
-margin_left = 381.0
-margin_top = 287.0
-margin_right = 617.0
-margin_bottom = 335.0
+[node name="IpAddressText" type="TextEdit" parent="LobbyMenu/LobbyStartPanel"]
+margin_left = 383.0
+margin_top = 284.0
+margin_right = 619.0
+margin_bottom = 332.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
-[connection signal="pressed" from="HostButton" to="HostButton" method="_on_HostButton_pressed"]
-[connection signal="pressed" from="JoinButton" to="JoinButton" method="_on_JoinButton_pressed"]
+
+[node name="InLobbyPanel" type="Panel" parent="LobbyMenu"]
+visible = false
+margin_left = 410.0
+margin_top = 138.0
+margin_right = 410.0
+margin_bottom = 138.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ReadyButton" type="Button" parent="LobbyMenu/InLobbyPanel"]
+margin_right = 181.0
+margin_bottom = 45.0
+text = "Ready"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PlayerList" type="ItemList" parent="LobbyMenu/InLobbyPanel"]
+margin_left = 2.0
+margin_top = 46.0
+margin_right = 180.0
+margin_bottom = 301.0
+[connection signal="pressed" from="LobbyMenu/LobbyStartPanel/HostButton" to="." method="_on_HostButton_pressed"]
+[connection signal="pressed" from="LobbyMenu/LobbyStartPanel/JoinButton" to="." method="_on_JoinButton_pressed"]
+[connection signal="pressed" from="LobbyMenu/InLobbyPanel/ReadyButton" to="." method="_on_ReadyButton_pressed"]

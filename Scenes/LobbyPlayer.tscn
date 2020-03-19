@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Scripts/LobbyPlayer.gd" type="Script" id=1]
+
+[node name="LobbyPlayer" type="HBoxContainer"]
+rect_min_size = Vector2( 120, 15 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+playerId = NodePath("PlayerId")
+status = NodePath("Status")
+
+[node name="PlayerId" type="Label" parent="."]
+margin_right = 51.0
+margin_bottom = 14.0
+text = "Player 3"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Status" type="Label" parent="."]
+margin_left = 55.0
+margin_right = 117.0
+margin_bottom = 14.0
+text = "Not ready"
+align = 1
+valign = 1
