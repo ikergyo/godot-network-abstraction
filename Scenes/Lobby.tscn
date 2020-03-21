@@ -72,6 +72,14 @@ margin_left = 2.0
 margin_top = 46.0
 margin_right = 180.0
 margin_bottom = 301.0
+
+[node name="BackButton" type="Button" parent="LobbyMenu/InLobbyPanel"]
+margin_left = 3.3241
+margin_top = 312.466
+margin_right = 180.324
+margin_bottom = 342.466
+text = "Back"
 [connection signal="pressed" from="LobbyMenu/LobbyStartPanel/HostButton" to="." method="_on_HostButton_pressed"]
 [connection signal="pressed" from="LobbyMenu/LobbyStartPanel/JoinButton" to="." method="_on_JoinButton_pressed"]
 [connection signal="pressed" from="LobbyMenu/InLobbyPanel/ReadyButton" to="." method="_on_ReadyButton_pressed"]
+[connection signal="pressed" from="LobbyMenu/InLobbyPanel/BackButton" to="." method="_on_BackButton_pressed"]

@@ -20,12 +20,23 @@ func _ready():
 var player_info = {}
 var my_id
 
+#It is necessary for initialize datas, because if you were in a lobby before, and you disconnect and join or create an other, then you need to initialize datas. 
+#If in this case you don't, then there will be some bugs, or anomaly because you can see some old data
+func init():
+	player_info.clear()
+	my_id=null
+
 func _player_connected(id):
 	#We restrict that it will be called only on the server, anything and it will send the datas to the connected nodes.
-	print("My id: " + str(get_tree().get_network_unique_id()))
-	print("_player_connected input ID: " + str(id))
-	# Called on both clients and server when a peer connects. Send my info to it.
-	rpc_id(id, "register_player")
+	if(get_tree().is_network_server()):
+		var new_player_info = { player_id = id, ready = false}
+		player_info[id] = new_player_info
+		refreshReadyList()
+		for p in player_info:
+			rpc_id(id, "register_player", player_info[p])
+			
+		print("My id: " + str(get_tree().get_network_unique_id()))
+		print("_player_connected input ID: " + str(id))
 
 func _player_disconnected(id):
 	player_info.erase(id) 
@@ -35,48 +46,15 @@ func _connected_ok():
 	pass # Only called on clients, not server. Will go unused; not useful here.
 
 func _server_disconnected():
-	pass # Server kicked us; show error and abort.
+	to_disconnect()
 
 func _connected_fail():
 	pass # Could not even connect to server; abort.
 
-remote func register_player():
+remote func register_player(new_player):
 	# Get the id of the RPC sender.
-	var id = get_tree().get_rpc_sender_id()
-	if (get_tree().is_network_server()):
-		var new_player_info = { player_id = id, ready = false}
-		player_info[id] = new_player_info
-	
-	if(!player_info.has(my_id)):
-		var my_player_info = { player_id = my_id, ready = false}
-		player_info[my_id] = my_player_info
-
-	print("RPC sender ID, after connect: " + str(id))
-	print("Local player_info dictionary" + str(player_info))
+	player_info[new_player.player_id] = new_player
 	refreshReadyList()
-
-remote func pre_configure_game():
-	var selfPeerID = get_tree().get_network_unique_id()
-
-	# Load world
-	var world = load("res://Scenes/PlayScene.tscn").instance()
-	get_node("/root").add_child(world)
-
-	# Load my player
-	var my_player = preload("res://Scenes/Player.tscn").instance()
-	my_player.set_name(str(selfPeerID))
-	my_player.set_network_master(selfPeerID) # Will be explained later
-	get_node("/root/world/players").add_child(my_player)
-
-	# Load other players
-	for p in player_info:
-		var player = preload("res://Scenes/Player.tscn").instance()
-		player.set_name(str(p))
-		player.set_network_master(p) # Will be explained later
-		get_node("/root/Play/PlayersContainer").add_child(player)
-
-	# Tell server (remember, server is always ID=1) that this peer is done pre-configuring.
-	rpc_id(1, "done_preconfiguring", selfPeerID)
 
 func addItem(id, status):
 	var readyPlayer = preload("res://Scenes/LobbyPlayer.tscn").instance()
@@ -93,6 +71,11 @@ func removeItem(id):
 			get_node(str(playerList)).remove_child(i)
 			i += 1
 			
+remotesync func setPlayerStatus(player_id, readyStatus):
+	player_info[player_id].ready = readyStatus
+	print("My_id" + str(my_id) + "PLAYER INFOS: " + str(player_info))
+	refreshReadyList()
+	checkReady()
 
 func refreshReadyList():
 	get_node(str(playerList)).clear()
@@ -102,9 +85,59 @@ func refreshReadyList():
 			status = "Ready"
 		get_node(str(playerList)).add_item("ID: " + str(player_info[p].player_id) + " Status: " + status)
 		
+func checkIsEveryoneReady():
+	for p in player_info:
+		if (!player_info[p].ready):
+			return false
+	return true
 
+func checkReady():
+	if(checkIsEveryoneReady()):
+		rpc("pre_configure_game")
+		
+remotesync func pre_configure_game():
+	get_tree().set_pause(true)
+	
+	# Load world
+	var world = load("res://Scenes/PlayScene.tscn").instance()
+	get_node("/root").call_deferred("add_child", world)
+	get_node(str(lobbyMainPanel)).hide()
 
+	# Load my player
+	var my_player = preload("res://Scenes/Player.tscn").instance()
+	my_player.set_name(str(my_id))
+	if(!get_tree().is_network_server()):
+		my_player.set_network_master(my_id) # Will be explained later
+	world.add_player_to_the_list(my_player)
 
+	# Load other players
+	for p in player_info:
+		if p == my_id:
+			continue
+		var player = preload("res://Scenes/Player.tscn").instance()
+		player.set_name(str(p))
+		player.set_network_master(p) 
+		world.add_player_to_the_list(player)
+	# Tell server (remember, server is always ID=1) that this peer is done pre-configuring.
+	rpc_id(1, "done_preconfiguring", my_id)
+
+var players_done = []
+
+remote func done_preconfiguring(who):
+	# Here are some checks you can do, for example
+	assert(get_tree().is_network_server())
+	assert(who in player_info) # Exists
+	assert(not who in players_done) # Was not added yet
+
+	players_done.append(who)
+
+	if players_done.size() == player_info.size():
+		rpc("post_configure_game")
+
+remotesync func post_configure_game():
+	get_tree().set_pause(false)
+	# Game starts now!
+	
 func _on_JoinButton_pressed():
 	var peer = NetworkedMultiplayerENet.new()
 	peer.create_client(NetworkGlobals.TEST_IP, NetworkGlobals.NETWORK_PORT)
@@ -123,21 +156,28 @@ func _on_HostButton_pressed():
 	get_tree().set_network_peer(peer)
 	get_node(str(lobbyStartPanel)).hide()
 	get_node(str(readyPanel)).show()
-	
 	my_id = get_tree().get_network_unique_id()
-	
 	player_info[my_id] = { player_id = my_id, ready = false }
-	
-	refreshReadyList()
-	
-
-remote func setPlayerStatus(player_id, readyStatus):
-	player_info[player_id].ready = readyStatus
-	print("My_id" + str(my_id) + "PLAYER INFOS: " + str(player_info))
 	
 	refreshReadyList()
 
 func _on_ReadyButton_pressed():
-	player_info[my_id].ready = true
+	#player_info[my_id].ready = true
 	rpc("setPlayerStatus", my_id, true)
+	refreshReadyList()
+
+func to_disconnect():
+	#It will disconnect. If this is the server, the paramter is relvant because it means, it will be closed after that time (it is in usec)
+	#In this case, almost immediately
+	get_tree().get_network_peer().close_connection(1)
+	#Maybe it is not necessary, but not problem to set null, because maybe there will be an offline mode, and it is disable the online things.
+	get_tree().set_network_peer(null)
+	get_node(str(lobbyStartPanel)).show()
+	get_node(str(readyPanel)).hide()
+	init()
+	
+	#You can kick player with: disconnect_peer method.
+
+func _on_BackButton_pressed():
+	to_disconnect()
 	
