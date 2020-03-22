@@ -31,6 +31,7 @@ func _player_connected(id):
 	if(get_tree().is_network_server()):
 		var new_player_info = { player_id = id, ready = false}
 		player_info[id] = new_player_info
+		rpc("register_player", new_player_info)
 		refreshReadyList()
 		for p in player_info:
 			rpc_id(id, "register_player", player_info[p])
@@ -92,8 +93,10 @@ func checkIsEveryoneReady():
 	return true
 
 func checkReady():
-	if(checkIsEveryoneReady()):
-		rpc("pre_configure_game")
+	if(get_tree().is_network_server()):
+		if(checkIsEveryoneReady()):
+			rpc("pre_configure_game")
+			#pre_configure_game()
 		
 remotesync func pre_configure_game():
 	get_tree().set_pause(true)
@@ -110,6 +113,7 @@ remotesync func pre_configure_game():
 		my_player.set_network_master(my_id) # Will be explained later
 	world.add_player_to_the_list(my_player)
 
+
 	# Load other players
 	for p in player_info:
 		if p == my_id:
@@ -123,7 +127,8 @@ remotesync func pre_configure_game():
 
 var players_done = []
 
-remote func done_preconfiguring(who):
+remotesync func done_preconfiguring(who):
+	print("WHO: " + str(who))
 	# Here are some checks you can do, for example
 	assert(get_tree().is_network_server())
 	assert(who in player_info) # Exists

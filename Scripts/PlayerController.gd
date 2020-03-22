@@ -13,3 +13,10 @@ func set_name(name):
 func addMessage(newMessage):
 	var messages = get_node(str(messagePath)).get_text()
 	get_node(str(messagePath)).set_text(messages + newMessage)
+
+
+master func sendMessage(message):
+	rpc("addPuppetMessage", message)
+	
+puppet func addPuppetMessage(message):
+	addMessage(message)
