@@ -87,3 +87,14 @@ __meta__ = {
 }
 
 [node name="PlayersList" type="HBoxContainer" parent="PlayersContainer/PlayerScoll"]
+
+[node name="DebugButton" type="Button" parent="."]
+margin_left = 397.0
+margin_top = 555.0
+margin_right = 565.0
+margin_bottom = 593.0
+text = "Debug Button"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="pressed" from="DebugButton" to="." method="_on_Button_pressed"]

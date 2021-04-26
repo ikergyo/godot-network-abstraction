@@ -1,0 +1,9 @@
+There is the Lobby.gd it handels everything. It use the base Godot network and control the lobby creation and messages sendings. It is a useful base class for matchmaking.
+
+NetworkGlobals is an autoloaded script, which has the basic constants for testing.
+
+
+TODO
+ - Create a new abstraction level, which can handle more than the lobby, like input streaming.
+ - Send Message buttons don't have functionality now. The code has been implemented, but it should be triggered by on button click events.
+

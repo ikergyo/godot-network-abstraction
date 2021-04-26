@@ -16,7 +16,8 @@ func addMessage(newMessage):
 
 
 master func sendMessage(message):
-	rpc("addPuppetMessage", message)
+	print("MASTER sendMessage has been called") 
+	#rpc("addPuppetMessage", message)
 	
 puppet func addPuppetMessage(message):
 	addMessage(message)

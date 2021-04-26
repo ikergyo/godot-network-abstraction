@@ -44,12 +44,14 @@ func _player_disconnected(id):
 	refreshReadyList()
 
 func _connected_ok():
+	print("Cnnection succes")
 	pass # Only called on clients, not server. Will go unused; not useful here.
 
 func _server_disconnected():
 	to_disconnect()
 
 func _connected_fail():
+	print("Connection failed")
 	pass # Could not even connect to server; abort.
 
 remote func register_player(new_player):
@@ -109,6 +111,7 @@ remotesync func pre_configure_game():
 	# Load my player
 	var my_player = preload("res://Scenes/Player.tscn").instance()
 	my_player.set_name(str(my_id))
+	NetworkGlobals.players_list[my_id] = my_player
 	if(!get_tree().is_network_server()):
 		my_player.set_network_master(my_id) # Will be explained later
 	world.add_player_to_the_list(my_player)
@@ -120,6 +123,7 @@ remotesync func pre_configure_game():
 			continue
 		var player = preload("res://Scenes/Player.tscn").instance()
 		player.set_name(str(p))
+		NetworkGlobals.players_list[p] = player
 		player.set_network_master(p) 
 		world.add_player_to_the_list(player)
 	# Tell server (remember, server is always ID=1) that this peer is done pre-configuring.
@@ -145,11 +149,13 @@ remotesync func post_configure_game():
 	
 func _on_JoinButton_pressed():
 	var peer = NetworkedMultiplayerENet.new()
+	peer.connect("connection_failed", self, "_connected_fail")
 	peer.create_client(NetworkGlobals.TEST_IP, NetworkGlobals.NETWORK_PORT)
+	
 	get_tree().set_network_peer(peer)
 	get_node(str(lobbyStartPanel)).hide()
 	get_node(str(readyPanel)).show()
-	
+	print(peer.is_refusing_new_connections())
 	my_id = get_tree().get_network_unique_id()
 	
 	refreshReadyList()
@@ -157,13 +163,14 @@ func _on_JoinButton_pressed():
 func _on_HostButton_pressed():
 	
 	var peer = NetworkedMultiplayerENet.new()
+	print(peer.is_refusing_new_connections())
 	peer.create_server(NetworkGlobals.NETWORK_PORT, NetworkGlobals.MAX_PLAYERS)
 	get_tree().set_network_peer(peer)
 	get_node(str(lobbyStartPanel)).hide()
 	get_node(str(readyPanel)).show()
 	my_id = get_tree().get_network_unique_id()
 	player_info[my_id] = { player_id = my_id, ready = false }
-	
+	print(peer.is_refusing_new_connections())
 	refreshReadyList()
 
 func _on_ReadyButton_pressed():
